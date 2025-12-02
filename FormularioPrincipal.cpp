@@ -20,11 +20,7 @@ System::Void FormularioPrincipal::MenuAbrir_Click(System::Object^ sender, System
 			ActualizarListaEntradas();
 			etiquetaEstado->Text = "Archivo cargado: " + dialogo->FileName;
 		}
-		else
-		{
-			MessageBox::Show("No se pudo abrir el archivo", "Error", 
-				MessageBoxButtons::OK, MessageBoxIcon::Error);
-		}
+		// El error ya se muestra dentro de AbrirArchivo con el mensaje detallado
 	}
 }
 
