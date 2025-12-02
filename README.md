@@ -51,11 +51,39 @@ editor_dungeon/
 
 ## Compilación
 
-1. Abre el archivo `EditorDungeon.vcxproj` en Visual Studio 2022
-2. Asegúrate de tener instalado el componente "Desarrollo de escritorio con C++"
+### Opción 1: Visual Studio (Recomendado)
+
+1. Abre el archivo `EditorDungeon.vcxproj` en **Visual Studio 2022**
+2. Asegúrate de tener instalados los siguientes componentes:
+   - **Desarrollo de escritorio con C++**
+   - **Compatibilidad con C++/CLI**
+   - **Windows 10 SDK**
 3. Selecciona la configuración (Debug o Release) y la plataforma (x86 o x64)
 4. Compila el proyecto (F7 o Ctrl+Shift+B)
 5. Ejecuta la aplicación (F5)
+
+### Opción 2: Línea de comandos con MSBuild
+
+Si prefieres compilar desde la línea de comandos, puedes usar el script `build.bat`:
+
+```batch
+build.bat
+```
+
+Este script:
+
+- Busca automáticamente MSBuild en tu instalación de Visual Studio 2022
+- Compila el proyecto en modo Debug x64
+- Muestra el resultado de la compilación
+
+**Nota importante**: Este proyecto **NO** puede compilarse con `dotnet build` porque es un proyecto C++/CLI que requiere MSBuild y las herramientas de Visual C++.
+
+### Requisitos de compilación
+
+- **Visual Studio 2022** (Community, Professional o Enterprise)
+- **Platform Toolset v143** (incluido con VS 2022)
+- **.NET Framework 4.8**
+- **Windows 10 SDK**
 
 ## Uso
 
