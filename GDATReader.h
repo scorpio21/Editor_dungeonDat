@@ -96,25 +96,63 @@ namespace EditorDungeon {
 					return false;
 				}
 
-				// Detectar endianness
-				informacion->littleEndian = DetectarEndianness(datosArchivo);
-
-				// Leer número de entradas (primeros 2 bytes)
+				// Leer primeros 2 bytes para detectar formato
 				int posicion = 0;
-				informacion->numeroEntradas = LeerPalabra(datosArchivo, posicion, informacion->littleEndian);
-
-				if (informacion->numeroEntradas <= 0 || informacion->numeroEntradas > 65535) {
-					return false;
-				}
-
-				// Leer tabla de tamaños
+				unsigned short firma = LeerPalabra(datosArchivo, posicion, true); // Leer como LE primero para probar
+				
 				List<int>^ tamanios = gcnew List<int>();
-				for (int i = 0; i < informacion->numeroEntradas; i++) {
-					if (posicion + 2 > datosArchivo->Length) {
+				
+				if (firma == 0x8005 || firma == 0x8004) {
+					// Formato DM2 (Little Endian)
+					informacion->littleEndian = true;
+					
+					// Leer número de entradas
+					informacion->numeroEntradas = LeerPalabra(datosArchivo, posicion, true);
+					
+					if (informacion->numeroEntradas <= 0 || informacion->numeroEntradas > 65535) {
 						return false;
 					}
-					int tamanio = LeerPalabra(datosArchivo, posicion, informacion->littleEndian);
-					tamanios->Add(tamanio);
+					
+					// Leer tamaño de la entrada 0 (4 bytes)
+					unsigned int tamanioEntrada0 = LeerPalabraDoble(datosArchivo, posicion, true);
+					tamanios->Add((int)tamanioEntrada0);
+					
+					// Leer tamaños del resto de entradas (1 a N-1)
+					for (int i = 1; i < informacion->numeroEntradas; i++) {
+						if (posicion + 2 > datosArchivo->Length) {
+							return false;
+						}
+						int tamanio = LeerPalabra(datosArchivo, posicion, true);
+						tamanios->Add(tamanio);
+					}
+				}
+				else {
+					// Formato DM1 (Big Endian) o formato antiguo
+					// La firma leída es en realidad el número de entradas
+					posicion = 0; // Reiniciar posición
+					informacion->littleEndian = false; // DM1 suele ser Big Endian
+					
+					informacion->numeroEntradas = LeerPalabra(datosArchivo, posicion, false);
+					
+					if (informacion->numeroEntradas <= 0 || informacion->numeroEntradas > 65535) {
+						// Intentar como Little Endian por si acaso
+						posicion = 0;
+						informacion->numeroEntradas = LeerPalabra(datosArchivo, posicion, true);
+						if (informacion->numeroEntradas > 0 && informacion->numeroEntradas <= 65535) {
+							informacion->littleEndian = true;
+						} else {
+							return false;
+						}
+					}
+					
+					// Leer tabla de tamaños (todas las entradas son de 2 bytes)
+					for (int i = 0; i < informacion->numeroEntradas; i++) {
+						if (posicion + 2 > datosArchivo->Length) {
+							return false;
+						}
+						int tamanio = LeerPalabra(datosArchivo, posicion, informacion->littleEndian);
+						tamanios->Add(tamanio);
+					}
 				}
 
 				// Leer las entradas de datos
@@ -125,16 +163,25 @@ namespace EditorDungeon {
 
 					if (entrada->tamanio > 0) {
 						if (posicion + entrada->tamanio > datosArchivo->Length) {
-							return false;
+							// Si nos pasamos, puede ser que el archivo esté truncado o el formato sea incorrecto
+							// Intentamos leer lo que se pueda
+							int bytesDisponibles = datosArchivo->Length - posicion;
+							if (bytesDisponibles > 0) {
+								entrada->tamanio = bytesDisponibles;
+							} else {
+								entrada->tamanio = 0;
+							}
 						}
 
-						entrada->datos = gcnew array<unsigned char>(entrada->tamanio);
-						Array::Copy(datosArchivo, posicion, entrada->datos, 0, entrada->tamanio);
-						posicion += entrada->tamanio;
+						if (entrada->tamanio > 0) {
+							entrada->datos = gcnew array<unsigned char>(entrada->tamanio);
+							Array::Copy(datosArchivo, posicion, entrada->datos, 0, entrada->tamanio);
+							posicion += entrada->tamanio;
 
-						// Si es la primera entrada (índice 0), puede contener la paleta
-						if (i == 0 && entrada->tamanio >= 4) {
-							CargarPaleta(entrada->datos);
+							// Si es la primera entrada (índice 0), puede contener la paleta
+							if (i == 0 && entrada->tamanio >= 4) {
+								CargarPaleta(entrada->datos);
+							}
 						}
 					}
 
