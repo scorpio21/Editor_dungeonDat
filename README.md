@@ -76,8 +76,6 @@ Este script:
 - Compila el proyecto en modo Debug x64
 - Muestra el resultado de la compilación
 
-**Nota importante**: Este proyecto **NO** puede compilarse con `dotnet build` porque es un proyecto C++/CLI que requiere MSBuild y las herramientas de Visual C++.
-
 ### Requisitos de compilación
 
 - **Visual Studio 2022** (Community, Professional o Enterprise)
