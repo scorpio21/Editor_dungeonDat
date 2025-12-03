@@ -133,6 +133,15 @@ Este proyecto se basa en el análisis del código fuente de **DM2GDED** (Dungeon
 
 ## Historial de Cambios
 
+### Versión 1.1 (2025-12-03)
+
+- Mejorada la lectura de archivos GDAT con formato DM2
+- Agregado soporte para firma 0x8005 (DM2 Little Endian)
+- Mejorada la detección automática de endianness
+- Agregado mensaje de depuración al abrir archivos
+- Verificación de consistencia de datos al cargar archivos
+- Corrección en la lectura de la tabla de tamaños (entrada 0 usa 4 bytes, resto 2 bytes)
+
 ### Versión 1.0 (2025-12-02)
 
 - Versión inicial del proyecto

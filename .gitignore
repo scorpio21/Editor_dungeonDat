@@ -105,3 +105,10 @@ $RECYCLE.BIN/
 # Archivos de datos de prueba (opcional, descomentar si no quieres versionar archivos .dat)
 # *.dat
 # Data/*.dat
+
+# Archivos de prueba temporales
+test_gdat.cpp
+test_gdat2.cpp
+test_gdat.exe
+test_gdat2.exe
+*.o
