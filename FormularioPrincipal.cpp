@@ -109,15 +109,15 @@ System::Void FormularioPrincipal::MenuAcercaDe_Click(System::Object ^ sender,
 // Implementación de manejadores de eventos de controles
 
 System::Void
-FormularioPrincipal::ListaEntradas_SelectedIndexChanged(System::Object ^ sender,
-                                                        System::EventArgs ^ e) {
-  if (listaEntradas->SelectedItems->Count == 0) {
+FormularioPrincipal::GridEntradas_SelectionChanged(System::Object ^ sender,
+                                                   System::EventArgs ^ e) {
+  if (gridEntradas->SelectedRows->Count == 0) {
     textoTamanioEntrada->Text = "";
     vistaPrevia->Image = nullptr;
     return;
   }
 
-  int indice = listaEntradas->SelectedItems[0]->Index;
+  int indice = gridEntradas->SelectedRows[0]->Index;
   InformacionGDAT ^ info = lector->ObtenerInformacion();
 
   if (indice >= 0 && indice < info->entradas->Count) {
@@ -128,13 +128,13 @@ FormularioPrincipal::ListaEntradas_SelectedIndexChanged(System::Object ^ sender,
 
 System::Void FormularioPrincipal::BotonExportar_Click(System::Object ^ sender,
                                                       System::EventArgs ^ e) {
-  if (listaEntradas->SelectedItems->Count == 0) {
+  if (gridEntradas->SelectedRows->Count == 0) {
     MessageBox::Show("Seleccione una entrada para exportar", "Advertencia",
                      MessageBoxButtons::OK, MessageBoxIcon::Warning);
     return;
   }
 
-  int indice = listaEntradas->SelectedItems[0]->Index;
+  int indice = gridEntradas->SelectedRows[0]->Index;
 
   SaveFileDialog ^ dialogo = gcnew SaveFileDialog();
   dialogo->Filter =
@@ -156,13 +156,13 @@ System::Void FormularioPrincipal::BotonExportar_Click(System::Object ^ sender,
 
 System::Void FormularioPrincipal::BotonImportar_Click(System::Object ^ sender,
                                                       System::EventArgs ^ e) {
-  if (listaEntradas->SelectedItems->Count == 0) {
+  if (gridEntradas->SelectedRows->Count == 0) {
     MessageBox::Show("Seleccione una entrada para importar", "Advertencia",
                      MessageBoxButtons::OK, MessageBoxIcon::Warning);
     return;
   }
 
-  int indice = listaEntradas->SelectedItems[0]->Index;
+  int indice = gridEntradas->SelectedRows[0]->Index;
 
   OpenFileDialog ^ dialogo = gcnew OpenFileDialog();
   dialogo->Filter =
@@ -185,7 +185,7 @@ System::Void FormularioPrincipal::BotonImportar_Click(System::Object ^ sender,
 System::Void
 FormularioPrincipal::BotonVistaPrevia_Click(System::Object ^ sender,
                                             System::EventArgs ^ e) {
-  if (listaEntradas->SelectedItems->Count == 0) {
+  if (gridEntradas->SelectedRows->Count == 0) {
     MessageBox::Show("Seleccione una entrada para ver la vista previa",
                      "Advertencia", MessageBoxButtons::OK,
                      MessageBoxIcon::Warning);
@@ -200,7 +200,7 @@ FormularioPrincipal::BotonVistaPrevia_Click(System::Object ^ sender,
 // Métodos auxiliares
 
 void FormularioPrincipal::ActualizarListaEntradas() {
-  listaEntradas->Items->Clear();
+  gridEntradas->Rows->Clear();
 
   if (!lector->EstaAbierto()) {
     return;
@@ -211,11 +211,13 @@ void FormularioPrincipal::ActualizarListaEntradas() {
   for (int i = 0; i < info->entradas->Count; i++) {
     EntradaGDAT ^ entrada = info->entradas[i];
 
-    ListViewItem ^ item = gcnew ListViewItem(i.ToString());
-    item->SubItems->Add(entrada->tamanio.ToString() + " bytes");
-    item->SubItems->Add(entrada->ObtenerNombreAmigable());
-
-    listaEntradas->Items->Add(item);
+    gridEntradas->Rows->Add(i.ToString(),
+                            String::Format("{0:X2}", entrada->categoria),
+                            String::Format("{0:X2}", entrada->clase1),
+                            String::Format("{0:X2}", entrada->clase2),
+                            String::Format("{0:X2}", entrada->tipo),
+                            entrada->tamanio.ToString() + " bytes",
+                            entrada->ObtenerNombreAmigable());
   }
 }
 
@@ -237,6 +239,6 @@ void FormularioPrincipal::LimpiarFormulario() {
   textoNumeroEntradas->Text = "";
   textoEndianness->Text = "";
   textoTamanioEntrada->Text = "";
-  listaEntradas->Items->Clear();
+  gridEntradas->Rows->Clear();
   vistaPrevia->Image = nullptr;
 }

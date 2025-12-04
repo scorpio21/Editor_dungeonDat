@@ -28,14 +28,14 @@ Este proyecto es un editor visual que permite abrir, visualizar, modificar y gua
 
 ## Estructura del Proyecto
 
-```
-editor_dungeon/
-├── EditorDungeon.vcxproj      # Archivo de proyecto de Visual Studio
-├── Main.cpp                    # Punto de entrada de la aplicación
-├── FormularioPrincipal.h       # Definición del formulario principal
-├── FormularioPrincipal.cpp     # Implementación del formulario principal
-├── FormularioPrincipal.resx    # Recursos del formulario
-├── GDATReader.h                # Clase para leer/escribir archivos GDAT
+```text
+   editor_dungeon/
+   ├── EditorDungeon.vcxproj      # Archivo de proyecto de Visual Studio
+   ├── Main.cpp                    # Punto de entrada de la aplicación
+   ├── FormularioPrincipal.h       # Definición del formulario principal
+   ├── FormularioPrincipal.cpp     # Implementación del formulario principal
+   ├── FormularioPrincipal.resx    # Recursos del formulario
+   ├── GDATReader.h                # Clase para leer/escribir archivos GDAT
 ├── GDATReader.cpp              # Implementación del lector GDAT
 ├── Estructuras.h               # Estructuras de datos para GDAT
 ├── Data/                       # Directorio para archivos de datos de prueba
@@ -114,7 +114,7 @@ Este script:
 
 Los archivos GDAT tienen la siguiente estructura:
 
-```
+```text
 [2 bytes] Número de entradas (N)
 [2*N bytes] Tabla de tamaños (una palabra de 16 bits por entrada)
 [Variable] Datos de cada entrada (secuencialmente)
@@ -132,6 +132,17 @@ Los archivos GDAT tienen la siguiente estructura:
 Este proyecto se basa en el análisis del código fuente de **DM2GDED** (Dungeon Master 2 Graphics Data Editor), respetando las estructuras y formatos originales.
 
 ## Historial de Cambios
+
+### Versión 1.2 (2025-12-04)
+
+- **CORRECCIÓN CRÍTICA**: Arreglada la lectura de archivos GDAT DM1 (Big Endian)
+  - La Entrada 0 ahora se lee correctamente como 4 bytes (DWORD) en lugar de 2 bytes
+  - Esto soluciona el problema de desfase que causaba que todos los datos se leyeran incorrectamente
+- Reemplazado ListView por DataGridView para mejor visualización de datos
+  - Ahora se muestran columnas para: Índice, Categoría, Clase1, Clase2, Tipo, Tamaño y Descripción
+  - Formato similar al programa original DM2GDED
+  - Valores mostrados en formato hexadecimal para mejor legibilidad
+- Mejorada la organización del código en `GDATReader.h`
 
 ### Versión 1.1 (2025-12-03)
 
