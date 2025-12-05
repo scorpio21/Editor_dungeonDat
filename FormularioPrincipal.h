@@ -53,7 +53,8 @@ private:
   System::Windows::Forms::ToolStripStatusLabel ^ etiquetaEstado;
 
   System::Windows::Forms::SplitContainer ^ contenedorPrincipal;
-  System::Windows::Forms::DataGridView ^ gridEntradas;
+  System::Windows::Forms::TreeView ^ arbolCategorias;
+  System::Windows::Forms::DataGridView ^ gridDetalles;
 
   System::Windows::Forms::Panel ^ panelDetalles;
   System::Windows::Forms::GroupBox ^ grupoInformacion;
@@ -163,78 +164,57 @@ private:
     // Contenedor principal
     this->contenedorPrincipal = gcnew System::Windows::Forms::SplitContainer();
     this->contenedorPrincipal->Dock = DockStyle::Fill;
-    this->contenedorPrincipal->SplitterDistance = 400;
+    this->contenedorPrincipal->SplitterDistance = 200;
     this->contenedorPrincipal->SplitterMoved +=
         gcnew System::Windows::Forms::SplitterEventHandler(
             this, &FormularioPrincipal::ContenedorPrincipal_SplitterMoved);
     this->contenedorPrincipal->Orientation = Orientation::Vertical;
 
-    // DataGridView de entradas
-    this->gridEntradas = gcnew System::Windows::Forms::DataGridView();
-    this->gridEntradas->Dock = DockStyle::Fill;
-    this->gridEntradas->AllowUserToAddRows = false;
-    this->gridEntradas->AllowUserToDeleteRows = false;
-    this->gridEntradas->ReadOnly = true;
-    this->gridEntradas->SelectionMode =
+    // TreeView de categorías (izquierda)
+    this->arbolCategorias = gcnew System::Windows::Forms::TreeView();
+    this->arbolCategorias->Dock = DockStyle::Fill;
+    this->arbolCategorias->AfterSelect +=
+        gcnew System::Windows::Forms::TreeViewEventHandler(
+            this, &FormularioPrincipal::ArbolCategorias_AfterSelect);
+
+    // DataGridView de detalles (derecha)
+    this->gridDetalles = gcnew System::Windows::Forms::DataGridView();
+    this->gridDetalles->Dock = DockStyle::Fill;
+    this->gridDetalles->AllowUserToAddRows = false;
+    this->gridDetalles->AllowUserToDeleteRows = false;
+    this->gridDetalles->ReadOnly = true;
+    this->gridDetalles->SelectionMode =
         DataGridViewSelectionMode::FullRowSelect;
-    this->gridEntradas->MultiSelect = false;
-    this->gridEntradas->RowHeadersVisible = false;
-    this->gridEntradas->AutoSizeColumnsMode =
+    this->gridDetalles->MultiSelect = false;
+    this->gridDetalles->RowHeadersVisible = false;
+    this->gridDetalles->AutoSizeColumnsMode =
         DataGridViewAutoSizeColumnsMode::Fill;
-    this->gridEntradas->SelectionChanged += gcnew System::EventHandler(
-        this, &FormularioPrincipal::GridEntradas_SelectionChanged);
 
-    // Configurar columnas
-    DataGridViewTextBoxColumn ^ colIndice = gcnew DataGridViewTextBoxColumn();
-    colIndice->Name = "Indice";
-    colIndice->HeaderText = "Índice";
-    colIndice->Width = 60;
-    colIndice->FillWeight = 10;
-    this->gridEntradas->Columns->Add(colIndice);
+    // Configurar columnas del grid de detalles
+    DataGridViewTextBoxColumn ^ colName = gcnew DataGridViewTextBoxColumn();
+    colName->Name = "Name";
+    colName->HeaderText = "Name";
+    colName->Width = 100;
+    this->gridDetalles->Columns->Add(colName);
 
-    DataGridViewTextBoxColumn ^ colCategoria =
+    DataGridViewTextBoxColumn ^ colType = gcnew DataGridViewTextBoxColumn();
+    colType->Name = "Type";
+    colType->HeaderText = "Type";
+    colType->Width = 80;
+    this->gridDetalles->Columns->Add(colType);
+
+    DataGridViewTextBoxColumn ^ colDescription =
         gcnew DataGridViewTextBoxColumn();
-    colCategoria->Name = "Categoria";
-    colCategoria->HeaderText = "Cat";
-    colCategoria->Width = 50;
-    colCategoria->FillWeight = 8;
-    this->gridEntradas->Columns->Add(colCategoria);
+    colDescription->Name = "Description";
+    colDescription->HeaderText = "Description";
+    colDescription->Width = 200;
+    this->gridDetalles->Columns->Add(colDescription);
 
-    DataGridViewTextBoxColumn ^ colClase1 = gcnew DataGridViewTextBoxColumn();
-    colClase1->Name = "Clase1";
-    colClase1->HeaderText = "C1";
-    colClase1->Width = 50;
-    colClase1->FillWeight = 8;
-    this->gridEntradas->Columns->Add(colClase1);
-
-    DataGridViewTextBoxColumn ^ colClase2 = gcnew DataGridViewTextBoxColumn();
-    colClase2->Name = "Clase2";
-    colClase2->HeaderText = "C2";
-    colClase2->Width = 50;
-    colClase2->FillWeight = 8;
-    this->gridEntradas->Columns->Add(colClase2);
-
-    DataGridViewTextBoxColumn ^ colTipo = gcnew DataGridViewTextBoxColumn();
-    colTipo->Name = "Tipo";
-    colTipo->HeaderText = "Tipo";
-    colTipo->Width = 50;
-    colTipo->FillWeight = 8;
-    this->gridEntradas->Columns->Add(colTipo);
-
-    DataGridViewTextBoxColumn ^ colTamanio = gcnew DataGridViewTextBoxColumn();
-    colTamanio->Name = "Tamanio";
-    colTamanio->HeaderText = "Tamaño";
-    colTamanio->Width = 80;
-    colTamanio->FillWeight = 12;
-    this->gridEntradas->Columns->Add(colTamanio);
-
-    DataGridViewTextBoxColumn ^ colDescripcion =
-        gcnew DataGridViewTextBoxColumn();
-    colDescripcion->Name = "Descripcion";
-    colDescripcion->HeaderText = "Descripción";
-    colDescripcion->Width = 200;
-    colDescripcion->FillWeight = 46;
-    this->gridEntradas->Columns->Add(colDescripcion);
+    DataGridViewTextBoxColumn ^ colValue = gcnew DataGridViewTextBoxColumn();
+    colValue->Name = "Value";
+    colValue->HeaderText = "Value";
+    colValue->Width = 150;
+    this->gridDetalles->Columns->Add(colValue);
 
     // Panel de detalles
     this->panelDetalles = gcnew System::Windows::Forms::Panel();
@@ -339,8 +319,8 @@ private:
     this->panelDetalles->Controls->Add(this->vistaPrevia);
 
     // Agregar controles al contenedor
-    this->contenedorPrincipal->Panel1->Controls->Add(this->gridEntradas);
-    this->contenedorPrincipal->Panel2->Controls->Add(this->panelDetalles);
+    this->contenedorPrincipal->Panel1->Controls->Add(this->arbolCategorias);
+    this->contenedorPrincipal->Panel2->Controls->Add(this->gridDetalles);
 
     // Agregar controles al formulario
     this->Controls->Add(this->contenedorPrincipal);
@@ -366,8 +346,8 @@ private:
                                   System::EventArgs ^ e);
 
   // Manejadores de eventos de controles
-  System::Void GridEntradas_SelectionChanged(System::Object ^ sender,
-                                             System::EventArgs ^ e);
+  System::Void ArbolCategorias_AfterSelect(
+      System::Object ^ sender, System::Windows::Forms::TreeViewEventArgs ^ e);
   System::Void BotonExportar_Click(System::Object ^ sender,
                                    System::EventArgs ^ e);
   System::Void BotonImportar_Click(System::Object ^ sender,

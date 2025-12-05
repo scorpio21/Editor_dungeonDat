@@ -2,6 +2,7 @@
 
 using namespace System;
 using namespace System::Windows::Forms;
+using namespace System::Collections::Generic;
 using namespace EditorDungeon;
 
 // Implementación de manejadores de eventos del menú
@@ -17,7 +18,6 @@ System::Void FormularioPrincipal::MenuAbrir_Click(System::Object ^ sender,
       ActualizarInformacion();
       ActualizarListaEntradas();
 
-      // Mostrar información de depuración
       InformacionGDAT ^ info = lector->ObtenerInformacion();
       String ^ mensaje =
           String::Format("Archivo cargado: {0}\nEntradas: {1}\nEndianness: {2}",
@@ -28,56 +28,19 @@ System::Void FormularioPrincipal::MenuAbrir_Click(System::Object ^ sender,
       MessageBox::Show(mensaje, "Información del archivo",
                        MessageBoxButtons::OK, MessageBoxIcon::Information);
     }
-    // El error ya se muestra dentro de AbrirArchivo con el mensaje detallado
   }
 }
 
 System::Void FormularioPrincipal::MenuGuardar_Click(System::Object ^ sender,
                                                     System::EventArgs ^ e) {
-  if (!lector->EstaAbierto()) {
-    MessageBox::Show("No hay ningún archivo abierto", "Advertencia",
-                     MessageBoxButtons::OK, MessageBoxIcon::Warning);
-    return;
-  }
-
-  InformacionGDAT ^ info = lector->ObtenerInformacion();
-  if (String::IsNullOrEmpty(info->rutaArchivo)) {
-    MenuGuardarComo_Click(sender, e);
-    return;
-  }
-
-  if (lector->GuardarArchivo(info->rutaArchivo)) {
-    etiquetaEstado->Text = "Archivo guardado correctamente";
-    MessageBox::Show("Archivo guardado correctamente", "Éxito",
-                     MessageBoxButtons::OK, MessageBoxIcon::Information);
-  } else {
-    MessageBox::Show("Error al guardar el archivo", "Error",
-                     MessageBoxButtons::OK, MessageBoxIcon::Error);
-  }
+  MessageBox::Show("Guardar no implementado aún", "Información",
+                   MessageBoxButtons::OK, MessageBoxIcon::Information);
 }
 
 System::Void FormularioPrincipal::MenuGuardarComo_Click(System::Object ^ sender,
                                                         System::EventArgs ^ e) {
-  if (!lector->EstaAbierto()) {
-    MessageBox::Show("No hay ningún archivo abierto", "Advertencia",
-                     MessageBoxButtons::OK, MessageBoxIcon::Warning);
-    return;
-  }
-
-  SaveFileDialog ^ dialogo = gcnew SaveFileDialog();
-  dialogo->Filter = "Archivos GDAT (*.dat)|*.dat|Todos los archivos (*.*)|*.*";
-  dialogo->Title = "Guardar archivo GDAT";
-
-  if (dialogo->ShowDialog() == System::Windows::Forms::DialogResult::OK) {
-    if (lector->GuardarArchivo(dialogo->FileName)) {
-      etiquetaEstado->Text = "Archivo guardado como: " + dialogo->FileName;
-      MessageBox::Show("Archivo guardado correctamente", "Éxito",
-                       MessageBoxButtons::OK, MessageBoxIcon::Information);
-    } else {
-      MessageBox::Show("Error al guardar el archivo", "Error",
-                       MessageBoxButtons::OK, MessageBoxIcon::Error);
-    }
-  }
+  MessageBox::Show("Guardar como no implementado aún", "Información",
+                   MessageBoxButtons::OK, MessageBoxIcon::Information);
 }
 
 System::Void FormularioPrincipal::MenuSalir_Click(System::Object ^ sender,
@@ -100,7 +63,7 @@ FormularioPrincipal::MenuImportarEntrada_Click(System::Object ^ sender,
 System::Void FormularioPrincipal::MenuAcercaDe_Click(System::Object ^ sender,
                                                      System::EventArgs ^ e) {
   MessageBox::Show(
-      "Editor de Archivos GDAT - Dungeon Master\n\n" + "Versión 1.0\n\n" +
+      "Editor de Archivos GDAT - Dungeon Master\n\n" + "Versión 2.0\n\n" +
           "Editor para archivos .dat de Dungeon Master 1 y 2\n\n" +
           "Desarrollado con C++/CLI y Windows Forms",
       "Acerca de", MessageBoxButtons::OK, MessageBoxIcon::Information);
@@ -108,99 +71,77 @@ System::Void FormularioPrincipal::MenuAcercaDe_Click(System::Object ^ sender,
 
 // Implementación de manejadores de eventos de controles
 
-System::Void
-FormularioPrincipal::GridEntradas_SelectionChanged(System::Object ^ sender,
-                                                   System::EventArgs ^ e) {
-  if (gridEntradas->SelectedRows->Count == 0) {
-    textoTamanioEntrada->Text = "";
-    vistaPrevia->Image = nullptr;
+System::Void FormularioPrincipal::ArbolCategorias_AfterSelect(
+    System::Object ^ sender, System::Windows::Forms::TreeViewEventArgs ^ e) {
+  gridDetalles->Rows->Clear();
+
+  if (e->Node == nullptr || e->Node->Tag == nullptr) {
     return;
   }
 
-  int indice = gridEntradas->SelectedRows[0]->Index;
+  // El Tag contiene un array con [categoría, clase1]
+  array<unsigned char> ^ tag = (array<unsigned char> ^) e->Node->Tag;
+  unsigned char categoria = tag[0];
+  unsigned char clase1 = tag[1];
+
   InformacionGDAT ^ info = lector->ObtenerInformacion();
 
-  if (indice >= 0 && indice < info->entradas->Count) {
-    EntradaGDAT ^ entrada = info->entradas[indice];
-    textoTamanioEntrada->Text = entrada->tamanio.ToString() + " bytes";
+  // Mostrar todas las entradas de esta categoría/clase1
+  for (int i = 0; i < info->entradas->Count; i++) {
+    EntradaGDAT ^ entrada = info->entradas[i];
+
+    bool mostrar = false;
+    if (clase1 == 255) {
+      // Nodo de categoría: mostrar todas las entradas de esta categoría
+      mostrar = (entrada->categoria == categoria);
+    } else {
+      // Nodo de clase: mostrar solo las entradas de esta categoría y clase1
+      mostrar = (entrada->categoria == categoria && entrada->clase1 == clase1);
+    }
+
+    if (mostrar) {
+      String ^ name = String::Format("{0:X2} {1:X2} {2:X2}", entrada->clase1,
+                                     entrada->clase2, entrada->tipo);
+      String ^ type = entrada->ObtenerNombreTipo();
+      String ^ description = "";
+      String ^ value = String::Format("{0} bytes", entrada->tamanio);
+
+      gridDetalles->Rows->Add(name, type, description, value);
+    }
   }
 }
 
 System::Void FormularioPrincipal::BotonExportar_Click(System::Object ^ sender,
                                                       System::EventArgs ^ e) {
-  if (gridEntradas->SelectedRows->Count == 0) {
-    MessageBox::Show("Seleccione una entrada para exportar", "Advertencia",
-                     MessageBoxButtons::OK, MessageBoxIcon::Warning);
-    return;
-  }
-
-  int indice = gridEntradas->SelectedRows[0]->Index;
-
-  SaveFileDialog ^ dialogo = gcnew SaveFileDialog();
-  dialogo->Filter =
-      "Archivos binarios (*.bin)|*.bin|Todos los archivos (*.*)|*.*";
-  dialogo->Title = "Exportar entrada";
-  dialogo->FileName = "entrada_" + indice.ToString() + ".bin";
-
-  if (dialogo->ShowDialog() == System::Windows::Forms::DialogResult::OK) {
-    if (lector->ExportarEntrada(indice, dialogo->FileName)) {
-      etiquetaEstado->Text = "Entrada exportada correctamente";
-      MessageBox::Show("Entrada exportada correctamente", "Éxito",
-                       MessageBoxButtons::OK, MessageBoxIcon::Information);
-    } else {
-      MessageBox::Show("Error al exportar la entrada", "Error",
-                       MessageBoxButtons::OK, MessageBoxIcon::Error);
-    }
-  }
+  MessageBox::Show("Exportar no implementado aún", "Información",
+                   MessageBoxButtons::OK, MessageBoxIcon::Information);
 }
 
 System::Void FormularioPrincipal::BotonImportar_Click(System::Object ^ sender,
                                                       System::EventArgs ^ e) {
-  if (gridEntradas->SelectedRows->Count == 0) {
-    MessageBox::Show("Seleccione una entrada para importar", "Advertencia",
-                     MessageBoxButtons::OK, MessageBoxIcon::Warning);
-    return;
-  }
-
-  int indice = gridEntradas->SelectedRows[0]->Index;
-
-  OpenFileDialog ^ dialogo = gcnew OpenFileDialog();
-  dialogo->Filter =
-      "Archivos binarios (*.bin)|*.bin|Todos los archivos (*.*)|*.*";
-  dialogo->Title = "Importar entrada";
-
-  if (dialogo->ShowDialog() == System::Windows::Forms::DialogResult::OK) {
-    if (lector->ImportarEntrada(indice, dialogo->FileName)) {
-      ActualizarListaEntradas();
-      etiquetaEstado->Text = "Entrada importada correctamente";
-      MessageBox::Show("Entrada importada correctamente", "Éxito",
-                       MessageBoxButtons::OK, MessageBoxIcon::Information);
-    } else {
-      MessageBox::Show("Error al importar la entrada", "Error",
-                       MessageBoxButtons::OK, MessageBoxIcon::Error);
-    }
-  }
+  MessageBox::Show("Importar no implementado aún", "Información",
+                   MessageBoxButtons::OK, MessageBoxIcon::Information);
 }
 
 System::Void
 FormularioPrincipal::BotonVistaPrevia_Click(System::Object ^ sender,
                                             System::EventArgs ^ e) {
-  if (gridEntradas->SelectedRows->Count == 0) {
-    MessageBox::Show("Seleccione una entrada para ver la vista previa",
-                     "Advertencia", MessageBoxButtons::OK,
-                     MessageBoxIcon::Warning);
-    return;
-  }
-
-  // TODO: Implementar decodificación de imágenes
   MessageBox::Show("Vista previa de imágenes en desarrollo", "Información",
                    MessageBoxButtons::OK, MessageBoxIcon::Information);
+}
+
+System::Void FormularioPrincipal::ContenedorPrincipal_SplitterMoved(
+    System::Object ^ sender, System::Windows::Forms::SplitterEventArgs ^ e) {
+  // Mostrar el tamaño actual del panel izquierdo en la barra de estado
+  etiquetaEstado->Text = String::Format("Tamaño panel: {0} px",
+                                        contenedorPrincipal->SplitterDistance);
 }
 
 // Métodos auxiliares
 
 void FormularioPrincipal::ActualizarListaEntradas() {
-  gridEntradas->Rows->Clear();
+  arbolCategorias->Nodes->Clear();
+  gridDetalles->Rows->Clear();
 
   if (!lector->EstaAbierto()) {
     return;
@@ -208,16 +149,56 @@ void FormularioPrincipal::ActualizarListaEntradas() {
 
   InformacionGDAT ^ info = lector->ObtenerInformacion();
 
+  // Agrupar entradas por categoría y clase1
+  Dictionary<unsigned char,
+             Dictionary<unsigned char, List<EntradaGDAT ^> ^> ^> ^
+      jerarquia =
+      gcnew Dictionary<unsigned char,
+                       Dictionary<unsigned char, List<EntradaGDAT ^> ^> ^>();
+
   for (int i = 0; i < info->entradas->Count; i++) {
     EntradaGDAT ^ entrada = info->entradas[i];
 
-    gridEntradas->Rows->Add(i.ToString(),
-                            String::Format("{0:X2}", entrada->categoria),
-                            String::Format("{0:X2}", entrada->clase1),
-                            String::Format("{0:X2}", entrada->clase2),
-                            String::Format("{0:X2}", entrada->tipo),
-                            entrada->tamanio.ToString() + " bytes",
-                            entrada->ObtenerNombreAmigable());
+    if (!jerarquia->ContainsKey(entrada->categoria)) {
+      jerarquia[entrada->categoria] =
+          gcnew Dictionary<unsigned char, List<EntradaGDAT ^> ^>();
+    }
+
+    if (!jerarquia[entrada->categoria]->ContainsKey(entrada->clase1)) {
+      jerarquia[entrada->categoria][entrada->clase1] =
+          gcnew List<EntradaGDAT ^>();
+    }
+
+    jerarquia[entrada->categoria][entrada->clase1]->Add(entrada);
+  }
+
+  // Crear nodos del árbol
+  for each (KeyValuePair<unsigned char,
+                        Dictionary<unsigned char, List<EntradaGDAT ^> ^> ^> ^
+           parCat in jerarquia) {
+    unsigned char cat = parCat->Key;
+
+    // Crear entrada temporal para obtener el nombre de la categoría
+    EntradaGDAT ^ tempCat = gcnew EntradaGDAT();
+    tempCat->categoria = cat;
+
+    TreeNode ^ nodoCat = gcnew TreeNode(
+        String::Format("{0:X2} {1}", cat, tempCat->ObtenerNombreCategoria()));
+    nodoCat->Tag =
+        gcnew array<unsigned char>{cat, 255}; // 255 = todas las clases
+
+    // Agregar subnodos por clase1
+    for each (KeyValuePair<unsigned char, List<EntradaGDAT ^> ^> ^
+             parClase in parCat->Value) {
+      unsigned char clase1 = parClase->Key;
+
+      TreeNode ^ nodoClase = gcnew TreeNode(String::Format("{0:X2}", clase1));
+      nodoClase->Tag = gcnew array<unsigned char>{cat, clase1};
+
+      nodoCat->Nodes->Add(nodoClase);
+    }
+
+    arbolCategorias->Nodes->Add(nodoCat);
   }
 }
 
@@ -239,13 +220,7 @@ void FormularioPrincipal::LimpiarFormulario() {
   textoNumeroEntradas->Text = "";
   textoEndianness->Text = "";
   textoTamanioEntrada->Text = "";
-  gridEntradas->Rows->Clear();
+  arbolCategorias->Nodes->Clear();
+  gridDetalles->Rows->Clear();
   vistaPrevia->Image = nullptr;
-}
-
-System::Void FormularioPrincipal::ContenedorPrincipal_SplitterMoved(
-    System::Object ^ sender, System::Windows::Forms::SplitterEventArgs ^ e) {
-  // Mostrar el tamaño actual del panel izquierdo en la barra de estado
-  etiquetaEstado->Text = String::Format("Tamaño panel: {0} px",
-                                        contenedorPrincipal->SplitterDistance);
 }
