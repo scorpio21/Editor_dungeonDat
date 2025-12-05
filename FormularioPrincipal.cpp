@@ -242,3 +242,10 @@ void FormularioPrincipal::LimpiarFormulario() {
   gridEntradas->Rows->Clear();
   vistaPrevia->Image = nullptr;
 }
+
+System::Void FormularioPrincipal::ContenedorPrincipal_SplitterMoved(
+    System::Object ^ sender, System::Windows::Forms::SplitterEventArgs ^ e) {
+  // Mostrar el tamaño actual del panel izquierdo en la barra de estado
+  etiquetaEstado->Text = String::Format("Tamaño panel: {0} px",
+                                        contenedorPrincipal->SplitterDistance);
+}

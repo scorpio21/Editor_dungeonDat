@@ -164,6 +164,9 @@ private:
     this->contenedorPrincipal = gcnew System::Windows::Forms::SplitContainer();
     this->contenedorPrincipal->Dock = DockStyle::Fill;
     this->contenedorPrincipal->SplitterDistance = 400;
+    this->contenedorPrincipal->SplitterMoved +=
+        gcnew System::Windows::Forms::SplitterEventHandler(
+            this, &FormularioPrincipal::ContenedorPrincipal_SplitterMoved);
     this->contenedorPrincipal->Orientation = Orientation::Vertical;
 
     // DataGridView de entradas
@@ -371,6 +374,8 @@ private:
                                    System::EventArgs ^ e);
   System::Void BotonVistaPrevia_Click(System::Object ^ sender,
                                       System::EventArgs ^ e);
+  System::Void ContenedorPrincipal_SplitterMoved(
+      System::Object ^ sender, System::Windows::Forms::SplitterEventArgs ^ e);
 
   // Métodos auxiliares
   void ActualizarListaEntradas();
