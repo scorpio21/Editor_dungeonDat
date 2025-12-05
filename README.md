@@ -131,21 +131,6 @@ Los archivos GDAT tienen la siguiente estructura:
 
 Este proyecto se basa en el análisis del código fuente de **DM2GDED** (Dungeon Master 2 Graphics Data Editor), respetando las estructuras y formatos originales.
 
-## Historial de Cambios
-
-### Versión 1.2 (2025-12-04)
-
-- **CORRECCIÓN CRÍTICA**: Arreglada la lectura de archivos GDAT DM1 (Big Endian)
-  - La Entrada 0 ahora se lee correctamente como 4 bytes (DWORD) en lugar de 2 bytes
-  - Esto soluciona el problema de desfase que causaba que todos los datos se leyeran incorrectamente
-- Reemplazado ListView por DataGridView para mejor visualización de datos
-  - Ahora se muestran columnas para: Índice, Categoría, Clase1, Clase2, Tipo, Tamaño y Descripción
-  - Formato similar al programa original DM2GDED
-  - Valores mostrados en formato hexadecimal para mejor legibilidad
-- Mejorada la organización del código en `GDATReader.h`
-
-### Versión 1.1 (2025-12-03)
-
 - Mejorada la lectura de archivos GDAT con formato DM2
 - Agregado soporte para firma 0x8005 (DM2 Little Endian)
 - Mejorada la detección automática de endianness
